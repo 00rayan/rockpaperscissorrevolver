@@ -1,6 +1,6 @@
 # Game Overview
 
-Player chooses between 3 buttons, AI predicts which one the player will press based on previous patterns, player wins if AI fails to predict button pressed. AI wins if it predicts correctly. First one to 10 points wins.
+Player and AI play rock paper scissors, AI tries to predict player's next move and plays corresponding move. Loser has to play russian roulette. 1 in 6 chance of taking damage. First to 0 HP loses.
 
 AI predicts next press based off of several factors, most chained choice, most frequent choice, last choice, etc. a more random player = more random AI.
 
