@@ -24,18 +24,43 @@ The program turns the entire text file into an array which is used for the predi
 
 ---
 
+### Confidence Meter/Multiplier
+
+Adaptive meter measuring AI's confidence. Starts at 1, increases/decreases by 0.1 when AI wins/loses. Capped at maximum 1.5x, minimum 0.5x. Basic but useful feature. Only enabled in hard mode. Confidence meter is absent in practice and basic mode, with the multiplier being set at a static value.
+
+---
+
 ## Unfinished Features
+
+Once all of these features are finished, the game will be complete, with only minor bug fixes or improvements:
+-Complex/simple pattern recognition [In progress]
+-Russian Roulette to replace FT10 system [Not implemented]
+-Change game to rock paper scissors [Not implemented]
+-Improved file management [Not implemented]
+-Graphics [Not implemented]
+-Audio/Sound effects [Not implemented]
+-Miscallaneous, fun mechanics (powerups, powerdowns eg) [Not implemented]
+-Challenge Mode: 1 HP, endless with invincible hardmode bot.
 
 ---
 
 ### Pattern Recognition (Work in Progress)
 
-The most "intelligent" part of this AI. Takes the last two turns of the user, then loops and reads through the move history, seeing if this ever was used, if it was, check the next input in sequence to this, and add a weight to it, which adapts to how many times it's been repeated.
+The most "intelligent" part of this AI. Takes the last two turns of the user, then loops and reads through the move history, seeing if this ever was used, if it was, check the next input in sequence to this, and add a weight to it, which adapts to how many times it's been repeated. Detects patterns 2 moves or longer. Ran on each turn, stores patterns in a 2D array stored in function weight_and_predict_move(). For every button in the pattern the user has pressed, increases pattern_weight, max 30, so it's not TOO sure.
+
+May add 2 versions, simple and complex. adds a bit of a difficulty setting to the bot.
 
 ---
 
-### Confidence Meter (Not added yet)
+## Russian Roulette
 
-Adaptive meter which affects the entire weighting system; a multiplier on top of all weights. Increases when AI scores more points, decreases when it loses more points. Exponential(?). Kind of an adaptive difficulty setting so AI becomes more predictable and overconfident when it's winning, making an opening for the user to take advantage of it. However, when it's losing, it gets more frustrated and applies a negative multiplier to the weights, decreasing them and making the AI more random and uncalculated, possibly giving it the advantage.
+Rather than using a traditional first to X score, every time the player or AI loses, they try their luck in russian roulette, losing 1 health point if the gun fires. The player and AI HP varies on each difficulty.
+
+Planned HP:
+Practice mode: AI: 3, Player: 5
+Basic: AI: 3, Player: 3
+Unfair: AI: 3, Player: 1
+
+(1 in 6 chance of gun firing)
 
 ---

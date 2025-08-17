@@ -2,7 +2,8 @@
 import random
 import os
 
-# No GUI as of now, but might add a GUI with pygame or tkinter, preferably pygame.
+# No GUI as of now, but might add a GUI with pygame or tkinter, preferably pygame. This is the one of last steps once the AI is actually a challenge and 90% complete. 
+# Note: change the win condition, not first to 10, russian roulette, with varying health per difficulty.
 
 def get_player_data(name): # Turns the playerdata into an easily readable array for the program.
     player_data = open(f"{name}.txt", "r") # Open file in read mode, to look at patterns.
@@ -70,7 +71,7 @@ def get_favorite_and_highest_chains(player_moves_list): # Calculates 2 values, f
         elif three_counter > one_counter and three_counter > two_counter:
             favorite_button[group] = 3
         else:
-            favorite_button[group] = random.randint(1,3) # TEMPORARY!!! Fallback for tied favorite buttons, replace this and line 97 with a better solution
+            favorite_button[group] = random.randint(1,3) # TEMPORARY!!! Fallback for tied favorite buttons, replace this and line 93 with a better solution
         if group == 1 or len(player_moves_list) < 20:
             done = True
         start = len(player_moves_list) - 20 # Start at last 20 inputs
@@ -93,7 +94,67 @@ def get_favorite_and_highest_chains(player_moves_list): # Calculates 2 values, f
     
     return most_chained_buttons, favorite_button, highest_chains
 
-def weight_and_predict_move(player_moves_list, last_choice): # Calls functions to get the data values, then weights, calculates and returns the move.
+def find_and_store_patterns(player_moves_list, patterns_list): # Unfinished, Finds and STORES repeating patterns in the player data, for hardmode, coding this is even harder. 
+    patterns = [[]] # Stores recurring patterns at patterns[x][0] and how many times they've repeated in patterns[x][1], corresponding to the same.
+    end = len(player_moves_list)
+    for start in range(0,4): # Checks for patterns starting with 1,2,3
+        two_long_patterns = [['start','1'],['start','2'],[start,'3']]
+        complex_pattern_process(start, player_moves_list, two_long_patterns, 3) # First stage, get patterns of length two, to narrow down current_patterns[]
+        one_counter, two_counter, three_counter = 0, 0, 0
+        counter_requirement = 4
+        for index in range (0,len(player_moves_list)):
+            if player_moves_list[index] == str(start) and index+1 < len(player_moves_list):
+                if player_moves_list[index+1] == '1':
+                    one_counter += 1
+                elif player_moves_list[index+1] == '2':
+                    two_counter += 1
+                else:
+                    three_counter += 1
+            if three_counter < counter_requirement:
+                two_long_patterns.remove(2)
+            if two_counter < counter_requirement:
+                two_long_patterns.remove(1)
+            if one_counter < counter_requirement:
+                two_long_patterns.remove(0)
+            print(two_long_patterns)        
+        patterns_list.append(patterns)
+    return patterns
+    
+def complex_pattern_process(num, player_moves_list, current_patterns, counter_requirement): # Get back 
+    return
+
+def check_for_patterns(last_2_moves, patterns_list): # Used only to check for pre-existing patterns. Does NOT check playerdata, used along find_and_store_patterns().
+    first_move, second_move = last_2_moves[0], last_2_moves[1]
+    print(last_2_moves) # DEBUG CODE, remove after code is confirmed to work.
+    for index in range(0, len(patterns_list)):
+        for pos in range (0,len(patterns_list[pos])):
+            if patterns_list[index][pos] == first_move and patterns_list[index][pos+1] == second_move:
+                next_move = patterns_list[index][pos+2]
+                break
+    return next_move
+
+def simple_patterns(last_move, player_moves_list):
+    one_counter, two_counter, three_counter = 0,0,0
+    next_move = None
+    for index in range(0,len(player_moves_list)):
+        if player_moves_list[index] == last_move:
+            if player_moves_list[index+1] == '1':
+                one_counter += 1
+            elif player_moves_list[index+1] == '2':
+                two_counter += 1
+            else:
+                three_counter +=1
+    if one_counter > two_counter and one_counter > three_counter:
+        next_move = 1
+    elif two_counter > one_counter and two_counter > three_counter:
+        next_move = 2
+    elif three_counter > one_counter and three_counter > two_counter:
+        next_move = 3
+    else:
+        next_move = None # Can't predict. (ok it can between the 2 highest but im too lazy)
+    return next_move
+
+def weight_and_predict_move(player_moves_list, last_choice, confidence): # Calls functions to get the data values, then weights, calculates and returns the move.
     if len(player_moves_list) < 5:
         move = random.randint(1,3) # TEMPORARY!!! Fallback if data insufficient, pure RNG. might update this later to use an "average person" playerdata. 
         return move
@@ -106,31 +167,37 @@ def weight_and_predict_move(player_moves_list, last_choice): # Calls functions t
 
     # Declare all weights, for predictability of player and favorite weights.    
     multiplier = 1
-    very_consistent_last_choice_weight, inconsistent_last_choice_weight, consistent_last_choice_weight  = 5, -5, 5/3 
-    favorite_weight_overall, favorite_weight_recent = 10/3, 20/3
-    chain_weight_overall, chain_weight_recent  = 10/3 , 15/3
+    very_consistent_last_choice_weight, inconsistent_last_choice_weight, consistent_last_choice_weight  = 10/3, -5, 5/3 
+    favorite_weight_overall, favorite_weight_recent = 10/3, 5
+    chain_weight_overall, chain_weight_recent  = 5/3, 5
 
     # 1. Decide if player is likely to chain or not, how consistent.
     for period in range (0,2):
         if period == 1:
             multiplier = 2
         if highest_chains[period] >= 4: # VERY CONSISTENT, +10 weight to last choice.
-            weights[last_choice-1] += very_consistent_last_choice_weight*multiplier
+            weights[last_choice-1] += very_consistent_last_choice_weight*multiplier*confidence
         if highest_chains[period] <= 2: # VERY INCONSISTENT, -5 weight to last choice. 
-            weights[last_choice-1] += inconsistent_last_choice_weight*multiplier
+            weights[last_choice-1] += inconsistent_last_choice_weight*multiplier*confidence
         else: # Somewhat consistent, +5 weight to last choice. 
-            weights[last_choice-1] += consistent_last_choice_weight*multiplier
+            weights[last_choice-1] += consistent_last_choice_weight*multiplier*confidence
 
     # Overall biggest chain and favorite
     overall_chained, overall_favorite = most_chained_buttons[0], favorite_button[0] 
-    weights[overall_chained - 1] += chain_weight_overall # Weight for most chained button 
-    weights[overall_favorite - 1] += favorite_weight_overall # Weight for favorite button.
+    weights[overall_chained - 1] += chain_weight_overall*confidence # Weight for most chained button 
+    weights[overall_favorite - 1] += favorite_weight_overall*confidence # Weight for favorite button.
 
     # Recent biggest chain and favorite
     recent_chained, recent_favorite = most_chained_buttons[1], favorite_button[1]
-    weights[recent_chained - 1] += chain_weight_recent # Weight for most chained button.
-    weights[recent_favorite - 1] += favorite_weight_recent # Weight for favorite button.
+    weights[recent_chained - 1] += chain_weight_recent*confidence # Weight for most chained button.
+    weights[recent_favorite - 1] += favorite_weight_recent*confidence # Weight for favorite button.
     
+    # Do simple pattern checks, add weight to corresponding button.
+    patterns_button_weight = 8 # Heaviest weight by far.
+    patterns_button = simple_patterns(last_choice, player_moves_list)
+    if patterns_button != None:
+        weights[patterns_button - 1] += patterns_button_weight
+
     # Use assigned RNG weight
     random_number = random.randint(0,100)
     if random_number < weights[0]: 
@@ -144,30 +211,34 @@ def weight_and_predict_move(player_moves_list, last_choice): # Calls functions t
     
     return move
 
-def check_for_pattern(player_moves_list): # Unfinished, checks repeating patterns of button choices.
-    last_2_moves = player_moves_list[-2:]
-    print(last_2_moves) # DEBUG CODE, remove after code is confirmed to work.
-    # note: i think i'll make it read the entire historical inputs then try to match the last 2 inputs to them to see if there's a pre-established pattern being repeated, the more frequently it's repeated (percentage out of line number) the more weight it has, being capped at like 10 probably.
-    return
-
 def main(): # Main gameplay loop
     player_name = input("Enter your name: ") # Get player name
     if not os.path.exists(f"{player_name}.txt"):
         with open(f"{player_name}.txt","w") as file: # Check for existing save file, create if not found.
             file.close()
     # Start both scores as 0
-    turns = 0 # Used to trigger repeating pattern check
-    ai_score = 0 
-    player_score = 0
-    last_choice = random.randint(1,3) # Start with a random last choice
+    turns = 0 # Used to trigger repeating pattern check later   
+    confidence_multipler = 1 # Multiplier added on the weightings that changes by 0.1 every win/lose
+    ai_health = 3 
+    player_health = 3
+    ai_roulette_death_number = random.randint(1,6) # Assign random number from 1 to 6 which kills AI/player in russian roulette
+    player_roulette_death_number = random.randint(1,6)
+    last_choice = random.randint(1,3) # Placeholder last choice, snce player hasn't made one yet.
     
     # Main gameplay loop, continues until AI/player reach 10 points.
-    while ai_score != 10 and player_score != 10:
+    while ai_health != 0 and player_health != 0:
         player_data_for_write = open(f"{player_name}.txt", "a") # Open file in append mode, as to not overwrite data. 
         player_data_for_read = get_player_data(player_name)
-        ai_prediction = weight_and_predict_move(player_data_for_read, last_choice)
-        print(f"AI Score: {ai_score}    Player Score: {player_score}")
-        player_move = input("Choose which button (1/2/3): ") # Get player choice
+        ai_prediction = weight_and_predict_move(player_data_for_read, last_choice,confidence_multipler)
+        if ai_prediction == 1: # Prediction = rock, move = paper
+            ai_move = 2
+        elif ai_prediction == 2: # Prediction = paper, move = scissors
+            ai_move = 3
+        else: # Prediction = scissors, move = rock
+            ai_move = 1
+
+        print(f"AI Health: {ai_health}    Player Health: {player_health}")
+        player_move = input("Choose which button (1. Rock/2. Paper/3. Scissors): ") # Get player choice
         if player_move != '1' and player_move != '2' and player_move != '3': # Input validation to prevent save file corruption
             print("Invalid input. ") # Error handling
             return
@@ -176,14 +247,32 @@ def main(): # Main gameplay loop
         new_data = f"{str(player_move)}\n"
         player_data_for_write.write(new_data) # Update player text file to include last input if valid
         
-        if player_move == ai_prediction: # Reward winner score
-            ai_score += 1
+        if player_move == 1 and ai_move == 2 or player_move == 2 and ai_move == 3 or player_move == 3 and ai_move == 1: # Reward winner score
+            print("AI beat player hand!")
+            spin_number = random.randint(1,6)
+            if spin_number == player_roulette_death_number:
+                print("Unlucky, you got shot!")
+                player_health -= 1
+            else:
+                print("Lucky, gun didn't go off!")
+            if confidence_multipler < 1.5:
+                confidence_multipler += 0.1
+        elif player_move == ai_move:
+            print("Tie!")
         else:
-            player_score += 1
-        os.system('cls') # Clear console for neatness.
+            print("Player beat AI hand!")
+            spin_number = random.randint(1,6)
+            if spin_number == ai_roulette_death_number:
+                print("AI got shot!")
+                ai_health -= 1
+            else:
+                print("AI got lucky!")
+            if confidence_multipler > 0.5:
+                confidence_multipler -= 0.1
+        # os.system('cls') # Clear console for neatness.
 
     # Print a suitable game over message (Win/Lose)
-    if ai_score == 10:
+    if player_health == 0:
         print("Game over, I've won.")
     else:
         print("Bravo, you win.")
@@ -194,4 +283,9 @@ def main(): # Main gameplay loop
     return
            
 while True:
-    main()
+   main()
+
+# # TEMPORARY !!!
+# player_moves_list = get_player_data('rayan')
+# patterns_list = []
+# find_and_store_patterns(player_moves_list, patterns_list)
