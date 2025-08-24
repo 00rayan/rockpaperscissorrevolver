@@ -18,16 +18,18 @@ A text file named after the player stores every input of the player. The AI refe
 
 ---
 
-## Russian Roulette
+### Russian Roulette
 
-Rather than using a traditional first to X score, every time the player or AI loses, they try their luck in russian roulette, losing 1 health point if the gun fires. The player and AI HP varies on each difficulty.  
+Rather than using a traditional first to X score, every time the player or AI loses, they try their luck in russian roulette, losing 1 health point if the gun fires. The player and AI HP varies on each difficulty. Difference being, on easy mode, this is disabled and damage is just guaranteed.
   
 Planned HP:  
-Practice mode: AI: 3, Player: 5  
-Basic: AI: 3, Player: 3  
+Easy: AI: 3, Player: 5 
+Standard: AI: 2, Player: 2  
 Unfair: AI: 3, Player: 1  
   
-(1 in 6 chance of gun firing)  
+There is a 1 in 3 chance of gun firing on easy and standard.  
+  
+UNFAIR MODE ONLY: There is a 1 in 6 chance of the revolver firing, HOWEVER, every (missed) shot taken, the chance increases, 1 in 5, 1 in 4, until the revolver is eventually fired. A tie also progresses the chamber for both sides similarly, albeit without firing.  
 
 ---
 ### Prediction Logic (To be improved)
@@ -38,7 +40,7 @@ The program turns the entire text file into an array which is used for the predi
 
 ### Confidence Meter/Multiplier
 
-Adaptive meter measuring AI's confidence. Starts at 1, increases/decreases by 0.1 when AI wins/loses. Capped at maximum 1.5x, minimum 0.5x. Basic but useful feature. Only enabled in hard mode. Confidence meter is absent in practice and basic mode, with the multiplier being set at a static value.
+Adaptive meter measuring AI's confidence. Starts at 1, increases/decreases by 0.1 when AI wins/loses. Capped at maximum 1.5x, minimum 0.5x. Basic but useful feature. Only enabled in hard mode. Confidence meter is absent in easy and standard mode, with the multiplier being set at a static value.
 
 ---
 
@@ -46,13 +48,20 @@ Adaptive meter measuring AI's confidence. Starts at 1, increases/decreases by 0.
 
 Once all of these features are finished, the game will be complete, with only minor bug fixes or improvements:  
 -Complex/simple pattern recognition [In progress]  
--Russian Roulette to replace FT10 system [Not implemented]  
--Change game to rock paper scissors [Not implemented]  
+-Graphics [In progress]  
+-Russian Roulette to replace FT10 system [Done]  
+-Change game to rock paper scissors [Done]  
+-Dynamic weighting [Not implemented]  
+-Win/lose based predictions [Not implemented]  
 -Improved file management [Not implemented]  
--Graphics [Not implemented]  
 -Audio/Sound effects [Not implemented]  
 -Miscallaneous, fun mechanics (powerups, powerdowns eg) [Not implemented]  
--Challenge Mode: 1 HP, endless with invincible hardmode bot.  
+-Challenge Mode: 1 HP, endless with invincible hardmode bot. [Not implemented]  
+
+Development Stages:
+1. Make first finished prototype with graphics [In progress]  
+2. Significantly improve AI [Not started]  
+3. Polish visuals, animations, SFX, etc. [Not started]  
 
 ---
 
