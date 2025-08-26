@@ -20,7 +20,6 @@ class Gameplay:
 
 round_loser = None
 loser_name = None
-round_feedback_timer = 60
 
 pygame.init() # Initialize pygame
 
@@ -35,8 +34,12 @@ game_title = pygame.display.set_caption("Rock, Paper, Scissor, Revolver")
 clock = pygame.time.Clock() # Used to cap framerate
 ingame_font = pygame.font.Font('assets/fonts/Retro Gaming.ttf',40) # Set font for game
 
-white_bg = pygame.Surface((SCREEN_WIDTH,SCREEN_HEIGHT))
-white_bg.fill("White")
+white_background = pygame.Surface((SCREEN_WIDTH,SCREEN_HEIGHT)) # Define background colors (foundation to be replaced with actual assets/anims)
+white_background.fill("White")
+difficulty_background = pygame.Surface((SCREEN_WIDTH,SCREEN_HEIGHT))
+difficulty_background.fill("grey")
+ingame_background = pygame.Surface((SCREEN_WIDTH,SCREEN_HEIGHT))
+
 
 # Get all game assets, and transform and rect appropriately.
 # Game title
@@ -61,7 +64,7 @@ choice_button_size, heart_size = (1/5 * SCREEN_WIDTH, 1/5 * SCREEN_WIDTH), (1/15
 rock_surface, paper_surface, scissor_surface = pygame.image.load('assets/sprites/ingame/rock.png'), pygame.image.load('assets/sprites/ingame/paper.png'), pygame.image.load('assets/sprites/ingame/scissor.png')
 rock_surface, paper_surface, scissor_surface = pygame.transform.scale(rock_surface, (choice_button_size)), pygame.transform.scale(paper_surface, (choice_button_size)), pygame.transform.scale(scissor_surface, (choice_button_size))
 player_heart_surface = pygame.image.load('assets/sprites/ingame/heart.png')
-player_heart_surface = pygame.transform.scale(player_heart_surface, (heart_size))
+player_heart_surface = pygame.transform.scale(player_heart_surface, (heart_size))   
 ai_heart_surface = pygame.image.load('assets/sprites/ingame/heart.png')
 ai_heart_surface = pygame.transform.scale(player_heart_surface, (heart_size))
 
@@ -80,7 +83,7 @@ rock_rect.center = (0.5*CENTRE_WIDTH,1.5*CENTRE_HEIGHT)
 paper_rect.center = (CENTRE_WIDTH, 1.5*CENTRE_HEIGHT)
 scissor_rect.center = (1.5*CENTRE_WIDTH, 1.5*CENTRE_HEIGHT)
 
-ai_heart_rect.topleft = (0,0)
+ai_heart_rect.topright = (SCREEN_WIDTH,0)
 player_heart_rect.bottomleft = (0, SCREEN_HEIGHT)
 
 game_state = "title"
@@ -92,10 +95,9 @@ while True:
             pygame.quit() # Quit game if pygame QUIT event met. Opposite of pygame.init()
             exit()
     # Game sprites and whatever drawn here
-    game_window.blit(white_bg,(0,0)) # Place surface at position
-
 # Title screen game state
     if game_state == "title": 
+        game_window.blit(white_background,(0,0)) # Draw white background in main menu (to be replaced)
         game_window.blit(game_title_surface,game_title_rect) # Render the game title and play button until user clicks a button
         game_window.blit(button_surface,button_rect)
         game_window.blit(text_surface,text_rect)
@@ -107,22 +109,28 @@ while True:
 
 # Difficulty select game state
     if game_state == "difficulty": 
+        game_window.blit(difficulty_background,(0,0)) # Draw gray background in difficulty select (to be replaced)
         game_window.blit(easy_surface,easy_rect)
         game_window.blit(standard_surface,standard_rect) # Render every difficulty face
         game_window.blit(unfair_surface,unfair_rect)
         for event in events: # Check if difficulty button clicked
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if easy_rect.collidepoint(event.pos) or standard_rect.collidepoint(event.pos) or unfair_rect.collidepoint(event.pos):
+                    hp_color = 'Black'
                     game_state = "ingame" # Mark difficulty as selected to move on from difficulty select
                     if easy_rect.collidepoint(event.pos):
+                        ingame_background.fill("white")
                         gameplay_object = Gameplay('easy',1,1,False,None)
                         ai_object, player_object = Player(1,2,None), Player(3,1,None)
                         enemy_sprite = pygame.transform.scale(easy_surface, ingame_enemy_size)
                     elif standard_rect.collidepoint(event.pos): # Assign appropriate difficulty values
+                        ingame_background.fill("gray90")
                         gameplay_object = Gameplay('standard',6,1,False,None)
                         ai_object, player_object = Player(2,1,None), Player(2,1,None)
                         enemy_sprite = pygame.transform.scale(standard_surface, ingame_enemy_size)
                     elif unfair_rect.collidepoint(event.pos):
+                        hp_color = 'White'
+                        ingame_background.fill("gray12")
                         gameplay_object = Gameplay('unfair',6,1,False,None)
                         ai_object, player_object = Player(2,1,None), Player(1,1,None)
                         enemy_sprite = pygame.transform.scale(unfair_surface, ingame_enemy_size)
@@ -131,15 +139,16 @@ while True:
                    
 # Gameplay game state
     if game_state == "ingame" and not gameplay_object.is_over:
+        game_window.blit(ingame_background,(0,0)) # Draw blue background ingame (to be replaced)
         if not os.path.exists(f"player_data.txt"):
             with open(f"player_data.txt","w") as file: # Check for existing save file, create if not found.
                 file.close()
         player_data_for_write = open(f"player_data.txt", "a") # Open file in append mode, as to not overwrite data.
         all_player_moves = ai_logic.get_player_data()
-        ai_hp_surface = ingame_font.render(f'{ai_object.hp}', False, 'Black') # Create surface for AI and player HP
-        player_hp_surface = ingame_font.render(f'{player_object.hp}', False, 'Black')
+        ai_hp_surface = ingame_font.render(f'{ai_object.hp}', False, hp_color) # Create surface for AI and player HP
+        player_hp_surface = ingame_font.render(f'{player_object.hp}', False, hp_color)
         ai_hp_rect, player_hp_rect, = ai_hp_surface.get_rect(), player_hp_surface.get_rect() # Create rect for AI and player HP for easy placement
-        ai_hp_rect.topleft, player_hp_rect.bottomleft = (0.075*SCREEN_WIDTH,0), (0.075*SCREEN_WIDTH,SCREEN_HEIGHT)
+        ai_hp_rect.topright, player_hp_rect.bottomleft = (0.925*SCREEN_WIDTH,0), (0.075*SCREEN_WIDTH,SCREEN_HEIGHT)
         game_window.blit(enemy_sprite, enemy_rect) # Render rock, paper, scissor buttons.
         game_window.blit(rock_surface, rock_rect)
         game_window.blit(paper_surface, paper_rect)
@@ -158,10 +167,9 @@ while True:
                 elif scissor_rect.collidepoint(event.pos):
                     player_move = 3
             if player_move != None:
-                round_feedback_timer = 90
+                round_feedback_timer = 45
                 ai_move = ai_logic.weight_and_predict_move('player_data',player_object.last_choice,ai_object.confidence) # Get AI move.
                 player_object.last_choice = player_move
-                chamber = gameplay_object.chamber_count
                 if player_move == 1 and ai_move == 2 or player_move == 2 and ai_move == 3 or player_move == 3 and ai_move == 1: # Reward winner score
                     round_loser = player_object # Assign player as loser
                     loser_name = 'Player'
@@ -176,7 +184,8 @@ while True:
                     round_loser = ai_object # Assign AI as loser
                     loser_name = 'AI'
                     if gameplay_object.difficulty != 'easy' and ai_object.confidence > 0.5:
-                        ai_object.confidence -= 0.1  
+                        ai_object.confidence -= 0.1
+                chamber = gameplay_object.chamber_count  
                 new_data = f"{str(player_move)}\n"
                 player_data_for_write.write(new_data) # Update player text file to include last input if valid
                 roulette_spin = random.randint(1,chamber) # Spin number 1-chambersize
@@ -201,9 +210,9 @@ while True:
             round_feedback_timer = 0
 
     if game_state == "results":
+        game_window.fill("White") # Draw white background in results (to be replaced)
         winner_text = ingame_font.render(f'{gameplay_object.winner} wins!', False, 'Green')
         winner_rect = winner_text.get_rect()
-
         menu_button_rect = button_surface.get_rect()
         menu_text = ingame_font.render("MENU", False, 'Black')
         menu_text = pygame.transform.scale(menu_text, (text_size))
@@ -214,7 +223,6 @@ while True:
         game_window.blit(winner_text, winner_rect)
         game_window.blit(button_surface, menu_button_rect)
         game_window.blit(menu_text, menu_text_rect)
-
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:    
                 if menu_button_rect.collidepoint(event.pos):
