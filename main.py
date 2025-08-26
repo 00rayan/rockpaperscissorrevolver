@@ -1,5 +1,6 @@
 import pygame
 import random
+import os
 from sys import exit
 import ai_logic
 
@@ -130,11 +131,15 @@ while True:
                    
 # Gameplay game state
     if game_state == "ingame" and not gameplay_object.is_over:
+        if not os.path.exists(f"player_data.txt"):
+            with open(f"player_data.txt","w") as file: # Check for existing save file, create if not found.
+                file.close()
+        player_data_for_write = open(f"player_data.txt", "a") # Open file in append mode, as to not overwrite data.
+        all_player_moves = ai_logic.get_player_data()
         ai_hp_surface = ingame_font.render(f'{ai_object.hp}', False, 'Black') # Create surface for AI and player HP
         player_hp_surface = ingame_font.render(f'{player_object.hp}', False, 'Black')
         ai_hp_rect, player_hp_rect, = ai_hp_surface.get_rect(), player_hp_surface.get_rect() # Create rect for AI and player HP for easy placement
         ai_hp_rect.topleft, player_hp_rect.bottomleft = (0.075*SCREEN_WIDTH,0), (0.075*SCREEN_WIDTH,SCREEN_HEIGHT)
-
         game_window.blit(enemy_sprite, enemy_rect) # Render rock, paper, scissor buttons.
         game_window.blit(rock_surface, rock_rect)
         game_window.blit(paper_surface, paper_rect)
@@ -171,7 +176,9 @@ while True:
                     round_loser = ai_object # Assign AI as loser
                     loser_name = 'AI'
                     if gameplay_object.difficulty != 'easy' and ai_object.confidence > 0.5:
-                        ai_object.confidence -= 0.1   
+                        ai_object.confidence -= 0.1  
+                new_data = f"{str(player_move)}\n"
+                player_data_for_write.write(new_data) # Update player text file to include last input if valid
                 roulette_spin = random.randint(1,chamber) # Spin number 1-chambersize
                 if roulette_spin == 1 and round_loser != None: # Fire revolver if 1 is spun
                     round_loser.hp -= 1
