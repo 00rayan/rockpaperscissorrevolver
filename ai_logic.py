@@ -5,8 +5,8 @@ import os
 # No GUI as of now, but might add a GUI with pygame or tkinter, preferably pygame. This is the one of last steps once the AI is actually a challenge and 90% complete. 
 # Note: change the win condition, not first to 10, russian roulette, with varying health per difficulty.
 
-def get_player_data(name): # Turns the playerdata into an easily readable array for the program.
-    player_data = open(f"{name}.txt", "r") # Open file in read mode, to look at patterns.
+def get_player_data(): # Turns the playerdata into an easily readable array for the program.
+    player_data = open(f"player_data.txt", "r") # Open file in read mode, to look at patterns.
     all_player_moves = [line.strip() for line in player_data.readlines()] # Strip of "\n" so the text file is clean
     player_data.close() # Close file to free up memory
     return all_player_moves
@@ -23,7 +23,7 @@ def update_highest_chains(favorite1,favorite2,favorite3,last_button,current_chai
             favorite3[time_group] = current_chain
     return
 
-def get_favorite_and_highest_chains(player_moves_list): # Calculates 2 values, favorite and highest chains. really long, break this down more?
+def get_favorite_and_highest_chains(player_moves_list): # Calculates 2 values, favorite and highest chains. really long, break this down more? Might axe later
     # Count total times each button pressed
     one_counter = [0,0]
     two_counter = [0,0]
@@ -152,15 +152,16 @@ def weight_and_predict_move(player_moves_list, last_choice, confidence): # Calls
     chain_weight_overall, chain_weight_recent  = 5/3, 5
 
     # 1. Decide if player is likely to chain or not, how consistent.
-    for period in range (0,2):
-        if period == 1:
-            multiplier = 2
-        if highest_chains[period] >= 4: # VERY CONSISTENT, +10 weight to last choice.
-            weights[last_choice-1] += very_consistent_last_choice_weight*multiplier*confidence
-        if highest_chains[period] <= 2: # VERY INCONSISTENT, -5 weight to last choice. 
-            weights[last_choice-1] += inconsistent_last_choice_weight*multiplier*confidence
-        else: # Somewhat consistent, +5 weight to last choice. 
-            weights[last_choice-1] += consistent_last_choice_weight*multiplier*confidence
+    if last_choice != None:
+        for period in range (0,2):
+            if period == 1:
+                multiplier = 2
+            if highest_chains[period] >= 4: # VERY CONSISTENT, +10 weight to last choice.
+                weights[last_choice-1] += very_consistent_last_choice_weight*multiplier*confidence
+            if highest_chains[period] <= 2: # VERY INCONSISTENT, -5 weight to last choice. 
+                weights[last_choice-1] += inconsistent_last_choice_weight*multiplier*confidence
+            else: # Somewhat consistent, +5 weight to last choice. 
+                weights[last_choice-1] += consistent_last_choice_weight*multiplier*confidence
 
     # Overall biggest chain and favorite
     overall_chained, overall_favorite = most_chained_buttons[0], favorite_button[0] 
@@ -191,96 +192,95 @@ def weight_and_predict_move(player_moves_list, last_choice, confidence): # Calls
     
     return move
 
-def main(): # Main gameplay loop, this will be replaced with GUI eventual
-    player_name = input("Enter your name: ") # Get player name
-    if not os.path.exists(f"{player_name}.txt"):
-        with open(f"{player_name}.txt","w") as file: # Check for existing save file, create if not found.
-            file.close()
-    difficulty = int(input("Choose difficulty: (1: Practice/2: Basic/3: Unfair)"))
-    if difficulty == 1:
-        roulette_count = 1 # Practice difficulty has no roulette, you don't deserve it.
-    elif difficulty == 2:
-        roulette_count = 3 # 1 in 3 chance for basic.
-    else:
-        roulette_count = 6 # 6 chamber roulette BUT chance increases.
-    # Start both scores as 0
-    turns = 0 # Used to trigger repeating pattern check later   
-    confidence_multipler = 1 # Multiplier added on the weightings that changes by 0.1 every win/lose
-    ai_health = 3 
-    player_health = 3
-    ai_roulette_death_number = random.randint(1,roulette_count) # Assign random number from 1 to 6 which kills AI/player in russian roulette
-    player_roulette_death_number = random.randint(1,roulette_count)
-    last_choice = random.randint(1,3) # Placeholder last choice, snce player hasn't made one yet.
+# def main(): # Main gameplay loop, soon to be removed, as pygame is now functional.
+#     if not os.path.exists(f"player_data.txt"):
+#         with open(f"player_data.txt","w") as file: # Check for existing save file, create if not found.
+#             file.close()
+#     difficulty = int(input("Choose difficulty: (1: Practice/2: Basic/3: Unfair)"))
+#     if difficulty == 1:
+#         roulette_count = 1 # Practice difficulty has no roulette, you don't deserve it.
+#     elif difficulty == 2:
+#         roulette_count = 3 # 1 in 3 chance for basic.
+#     else:
+#         roulette_count = 6 # 6 chamber roulette BUT chance increases.
+#     # Start both scores as 0
+#     turns = 0 # Used to trigger repeating pattern check later   
+#     confidence_multipler = 1 # Multiplier added on the weightings that changes by 0.1 every win/lose
+#     ai_health = 3 
+#     player_health = 3
+#     ai_roulette_death_number = random.randint(1,roulette_count) # Assign random number from 1 to 6 which kills AI/player in russian roulette
+#     player_roulette_death_number = random.randint(1,roulette_count)
+#     last_choice = random.randint(1,3) # Placeholder last choice, since player hasn't made one yet.
     
-    # Main gameplay loop, continues until AI/player reach 10 points.
-    while ai_health != 0 and player_health != 0:
-        player_data_for_write = open(f"{player_name}.txt", "a") # Open file in append mode, as to not overwrite data. 
-        player_data_for_read = get_player_data(player_name)
-        ai_prediction = weight_and_predict_move(player_data_for_read, last_choice,confidence_multipler)
-        if ai_prediction == 1: # Prediction = rock, move = paper
-            ai_move = 2
-        elif ai_prediction == 2: # Prediction = paper, move = scissors
-            ai_move = 3
-        else: # Prediction = scissors, move = rock
-            ai_move = 1
+#     # Main gameplay loop, continues until AI/player reach 10 points. Getting axed in favor of OOP very soon.
+#     while ai_health != 0 and player_health != 0:
+#         player_data_for_write = open(f"player_data.txt", "a") # Open file in append mode, as to not overwrite data. 
+#         player_data_for_read = get_player_data()
+#         ai_prediction = weight_and_predict_move(player_data_for_read, last_choice,confidence_multipler)
+#         if ai_prediction == 1: # Prediction = rock, move = paper
+#             ai_move = 2
+#         elif ai_prediction == 2: # Prediction = paper, move = scissors
+#             ai_move = 3
+#         else: # Prediction = scissors, move = rock
+#             ai_move = 1
 
-        print(f"AI Health: {ai_health}    Player Health: {player_health}")
-        player_move = input("Choose which button (1. Rock/2. Paper/3. Scissors): ") # Get player choice
-        if player_move != '1' and player_move != '2' and player_move != '3': # Input validation to prevent save file corruption
-            print("Invalid input. ") # Error handling
-            return
-        player_move = int(player_move)
-        last_choice = player_move # Store current player choice to be used in next turn for AI.
-        new_data = f"{str(player_move)}\n"
-        player_data_for_write.write(new_data) # Update player text file to include last input if valid
+#         print(f"AI Health: {ai_health}    Player Health: {player_health}")
+#         player_move = input("Choose which button (1. Rock/2. Paper/3. Scissors): ") # Get player choice
+#         if player_move != '1' and player_move != '2' and player_move != '3': # Input validation to prevent save file corruption
+#             print("Invalid input. ") # Error handling
+#             return
+#         player_move = int(player_move)
+#         last_choice = player_move # Store current player choice to be used in next turn for AI.
+#         new_data = f"{str(player_move)}\n"
+#         player_data_for_write.write(new_data) # Update player text file to include last input if valid
         
-        if player_move == 1 and ai_move == 2 or player_move == 2 and ai_move == 3 or player_move == 3 and ai_move == 1: # Reward winner score
-            print("AI beat player hand!")
-            spin_number = random.randint(1,roulette_count)
-            if spin_number == player_roulette_death_number:
-                print("Unlucky, you got shot!")
-                player_roulette_death_number = random.randint(1,roulette_count)
-                player_health -= 1
-            else:
-                print("Lucky, gun didn't go off!")
-            if confidence_multipler < 1.5:
-                confidence_multipler += 0.1
-            roulette_count -= 1
-            player_roulette_death_number = random.randint(1,roulette_count)
-            ai_roulette_death_number = random.randint(1,roulette_count)
-        elif player_move == ai_move:
-            print("Tie!")
-        else:
-            print("Player beat AI hand!")
-            spin_number = random.randint(1,roulette_count)
-            if spin_number == ai_roulette_death_number:
-                print("AI got shot!")
-                ai_roulette_death_number = random.randint(1,roulette_count)
-                ai_health -= 1
-            else:
-                print("AI got lucky!")
-            if confidence_multipler > 0.5:
-                confidence_multipler -= 0.1
-            roulette_count -= 1
-            if roulette_count == 0:
-                roulette_count = 6
-            player_roulette_death_number = random.randint(1,roulette_count)
-            ai_roulette_death_number = random.randint(1,roulette_count  )
-        # os.system('cls') # Clear console for neatness.
+#         if player_move == 1 and ai_move == 2 or player_move == 2 and ai_move == 3 or player_move == 3 and ai_move == 1: # Reward winner score
+#             print("AI beat player hand!")
+#             spin_number = random.randint(1,roulette_count)
+#             if spin_number == player_roulette_death_number:
+#                 print("Unlucky, you got shot!")
+#                 player_roulette_death_number = random.randint(1,roulette_count)
+#                 player_health -= 1
+#             else:
+#                 print("Lucky, gun didn't go off!")
+#             if confidence_multipler < 1.5:
+#                 confidence_multipler += 0.1
+#             roulette_count -= 1
+#             player_roulette_death_number = random.randint(1,roulette_count)
+#             ai_roulette_death_number = random.randint(1,roulette_count)
+#         elif player_move == ai_move:
+#             print("Tie!")
+#         else:
+#             print("Player beat AI hand!")
+#             spin_number = random.randint(1,roulette_count)
+#             if spin_number == ai_roulette_death_number:
+#                 print("AI got shot!")
+#                 ai_roulette_death_number = random.randint(1,roulette_count)
+#                 ai_health -= 1
+#             else:
+#                 print("AI got lucky!")
+#             if confidence_multipler > 0.5:
+#                 confidence_multipler -= 0.1
+#             roulette_count -= 1
+#             if roulette_count == 0:
+#                 roulette_count = 6
+#             player_roulette_death_number = random.randint(1,roulette_count)
+#             ai_roulette_death_number = random.randint(1,roulette_count  )
+#         # os.system('cls') # Clear console for neatness.
 
-    # Print a suitable game over message (Win/Lose)
-    if player_health == 0:
-        print("Game over, I've won.")
-    else:
-        print("Bravo, you win.")
-    player_data_for_write.close() # Close file at the end to free up memory.
-    retry = input("Play again? (Y/N): ")
-    if retry != 'Y':
-        exit()
-    return
+#     # Print a suitable game over message (Win/Lose)
+#     if player_health == 0:
+#         print("Game over, I've won.")
+#     else:
+#         print("Bravo, you win.")
+#     player_data_for_write.close() # Close file at the end to free up memory.
+#     retry = input("Play again? (Y/N): ")
+#     if retry != 'Y':
+#         exit()
+#     return
 
-while True:
-   main()
+# while True:
+#    main()
 
 # # TEMPORARY !!! For testing the complex pattern finding, don't remove until verified working.
 # player_moves_list = get_player_data('rayan')

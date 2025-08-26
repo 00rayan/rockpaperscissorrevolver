@@ -48,7 +48,7 @@ Adaptive meter measuring AI's confidence. Starts at 1, increases/decreases by 0.
 
 Once all of these features are finished, the game will be complete, with only minor bug fixes or improvements:  
 -Complex/simple pattern recognition [In progress]  
--Graphics [In progress]  
+-Graphics [Done]  
 -Russian Roulette to replace FT10 system [Done]  
 -Change game to rock paper scissors [Done]  
 -Dynamic weighting [Not implemented]  
