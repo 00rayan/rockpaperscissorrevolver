@@ -24,7 +24,7 @@ loser_name = None
 pygame.init() # Initialize pygame
 
 screen_res = pygame.display.Info()
-SCREEN_WIDTH, SCREEN_HEIGHT = screen_res.current_h*(3/4), screen_res.current_h*(9/16)
+SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
 CENTRE_WIDTH = SCREEN_WIDTH // 2
 CENTRE_HEIGHT = SCREEN_HEIGHT // 2
 
@@ -34,8 +34,10 @@ game_title = pygame.display.set_caption("Rock, Paper, Scissor, Revolver")
 clock = pygame.time.Clock() # Used to cap framerate
 ingame_font = pygame.font.Font('assets/fonts/Retro Gaming.ttf',40) # Set font for game
 
-white_background = pygame.Surface((SCREEN_WIDTH,SCREEN_HEIGHT)) # Define background colors (foundation to be replaced with actual assets/anims)
-white_background.fill("White")
+rps_background = pygame.image.load('assets/sprites/other/rpspattern.png') # Define background colors (foundation to be replaced with actual assets/anims)
+bg_horizontal_size, bg_vertical_size = rps_background.get_size()
+rps_x, rps_y = 0, 0
+bg_width, bg_height = rps_background.get_size()
 difficulty_background = pygame.Surface((SCREEN_WIDTH,SCREEN_HEIGHT))
 difficulty_background.fill("grey")
 ingame_background = pygame.Surface((SCREEN_WIDTH,SCREEN_HEIGHT))
@@ -97,7 +99,13 @@ while True:
     # Game sprites and whatever drawn here
 # Title screen game state
     if game_state == "title": 
-        game_window.blit(white_background,(0,0)) # Draw white background in main menu (to be replaced)
+        game_window.blit(rps_background,(rps_x,rps_y)) # Draw white background in main menu (to be replaced)
+        if rps_x > (SCREEN_WIDTH-bg_horizontal_size) and rps_y > (SCREEN_HEIGHT-bg_vertical_size):
+            rps_x -= 1
+            rps_y -= 1
+        else:
+            rps_x = 0
+            rps_y = 0
         game_window.blit(game_title_surface,game_title_rect) # Render the game title and play button until user clicks a button
         game_window.blit(button_surface,button_rect)
         game_window.blit(text_surface,text_rect)
@@ -190,6 +198,7 @@ while True:
                 player_data_for_write.write(new_data) # Update player text file to include last input if valid
                 roulette_spin = random.randint(1,chamber) # Spin number 1-chambersize
                 if roulette_spin == 1 and round_loser != None: # Fire revolver if 1 is spun
+                    gameplay_object.chamber_count = 6
                     round_loser.hp -= 1
         if loser_name != None:
             loser_status_surface = ingame_font.render(f'{loser_name} lost!',False,'Red')
