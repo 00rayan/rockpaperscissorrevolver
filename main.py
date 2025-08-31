@@ -181,20 +181,23 @@ while True:
                 if player_move == 1 and ai_move == 2 or player_move == 2 and ai_move == 3 or player_move == 3 and ai_move == 1: # Reward winner score
                     round_loser = player_object # Assign player as loser
                     loser_name = 'Player'
+                    player_stat = 'L' # Player data to store (win/lose/tie)
                     if gameplay_object.difficulty != 'easy' and ai_object.confidence < 2:
                         ai_object.confidence += 0.1                        
                 elif player_move == ai_move:
                     round_loser = None
                     loser_name = 'No one'
+                    player_stat = 'T' # Player data to store (win/lose/tie)
                     if gameplay_object.difficulty != 'easy' and gameplay_object.chamber_count != 1:
                         gameplay_object.chamber_count -= 1 # Progress chamber if tie, and chamber size not 1
                 elif player_move == 1 and ai_move == 3 or player_move == 2 and ai_move == 1 or player_move == 3 and ai_move == 2:
                     round_loser = ai_object # Assign AI as loser
                     loser_name = 'AI'
+                    player_stat = 'W' # Player data to store (win/lose/tie)
                     if gameplay_object.difficulty != 'easy' and ai_object.confidence > 0.5:
                         ai_object.confidence -= 0.1
                 chamber = gameplay_object.chamber_count  
-                new_data = f"{str(player_move)}\n"
+                new_data = f"{str(player_move)}{player_stat}\n"
                 player_data_for_write.write(new_data) # Update player text file to include last input if valid
                 roulette_spin = random.randint(1,chamber) # Spin number 1-chambersize
                 if roulette_spin == 1 and round_loser != None: # Fire revolver if 1 is spun

@@ -49,13 +49,13 @@ def get_favorite_and_highest_chains(player_moves_list): # Calculates 2 values, f
     while not done:
         for index in range(0, end): # Count for entire player moves list
             position = start + index
-            if player_moves_list[position] == "1":
+            if (player_moves_list[position])[:1] == "1":
                 one_counter[group] += 1
-            elif player_moves_list[position] == "2": # Increase the respective counters for each button
+            elif (player_moves_list[position])[:1] == "2": # Increase the respective counters for each button
                 two_counter[group] += 1
-            elif player_moves_list[position] == "3":
+            elif (player_moves_list[position])[:1] == "3":
                 three_counter[group] += 1
-            if last == player_moves_list[position]:
+            if last == (player_moves_list[position])[:1]:
                 current_chain += 1
             else:
                 update_highest_chains(highest_one_chains,highest_two_chains,highest_three_chains,last,current_chain,group)
@@ -104,7 +104,7 @@ def complex_pattern_process(num, player_moves_list, current_patterns, counter_re
     return
 
 def check_for_patterns(last_2_moves, patterns_list): # Used only to check for pre-existing patterns. Does NOT check playerdata, used along find_and_store_patterns(). Please send help
-    first_move, second_move = last_2_moves[0], last_2_moves[1]
+    first_move, second_move = (last_2_moves[0])[:1], (last_2_moves[1])[:1]
     print(last_2_moves) # DEBUG CODE, remove after code is confirmed to work.
     for index in range(0, len(patterns_list)):
         for pos in range (0,len(patterns_list[pos])):
@@ -117,10 +117,10 @@ def simple_patterns(last_move, player_moves_list):
     one_counter, two_counter, three_counter = 0,0,0
     next_move = None
     for index in range(0,len(player_moves_list)):
-        if player_moves_list[index] == last_move:
-            if player_moves_list[index+1] == '1':
+        if (player_moves_list[index])[:1] == last_move:
+            if (player_moves_list[index+1])[:1] == '1':
                 one_counter += 1
-            elif player_moves_list[index+1] == '2':
+            elif (player_moves_list[index+1])[:1] == '2':
                 two_counter += 1
             else:
                 three_counter +=1
@@ -189,7 +189,7 @@ def weight_and_predict_move(player_moves_list, last_choice, confidence): # Calls
         move = 3 # In range of button 3 weight 
     else:
         move = random.randint(1,3) # In range of wildcard weight
-    
+    print(weights)
     return move
 
 def main(): # Main gameplay loop, soon to be removed, as pygame is now functional.
