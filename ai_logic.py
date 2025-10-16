@@ -2,7 +2,7 @@
 import random
 import os
 
-# No GUI as of now, but might add a GUI with pygame or tkinter, preferably pygame. This is the one of last steps once the AI is actually a challenge and 90% complete. 
+# GUI added with pygame. 
 # Note: change the win condition, not first to 10, russian roulette, with varying health per difficulty.
 
 def get_player_data(): # Turns the playerdata into an easily readable array for the program.
@@ -23,11 +23,30 @@ def update_highest_chains(favorite1,favorite2,favorite3,last_button,current_chai
             favorite3[time_group] = current_chain
     return
 
-def get_favorite_and_highest_chains(player_moves_list): # Calculates 2 values, favorite and highest chains. really long, break this down more? Might axe later
+def calculate_change_frequency_weight(change_rate): # Calculate a weight based on the change rate and return, returns 3 times.
+    if change_rate > 50: # If change rate > 50%, frequent change.
+        frequent_change = True
+    else:
+        frequent_change = False # Infrequent change.
+    
+    # Calculate weight value based off of the change rate (exponential)
+    # The max weight is 20, for a positive change rate so we will calculate it here.
+    if frequent_change:
+        calculated_weight = 5 + 0.3*(change_rate-50) # Weird formula i worked out to calculate weight proportionally
+    # For a negative change rate the weight is higher the less it is. So inverse the first function?
+    else:
+        calculated_weight = 5 + 0.3*(50-change_rate) # Opposite of that formula, fun fact, these two combined make a modulo lookin function
+
+    return calculated_weight
+
+def get_favorites_and_highest_chains(player_moves_list): # Calculates 2 values, favorite and highest chains. really long, break this down more? Might axe later
     # Count total times each button pressed
     one_counter = [0,0]
     two_counter = [0,0]
     three_counter = [0,0]
+
+    # Count each time a button is pressed first 
+    first_counter = [0,0,0]
 
     # Count highest chain press of each button
     highest_one_chains = [1,1] # Pos 1: overall, Pos 2: recent   
@@ -36,7 +55,16 @@ def get_favorite_and_highest_chains(player_moves_list): # Calculates 2 values, f
     most_chained_buttons = [0,0]
     highest_chains = [0,0]
     favorite_button = [0,0]
-    
+
+    # Define variables to determine how often player switches on win/loss, to weight next move.
+    win_counter = 0
+    lose_counter = 0
+    tie_counter = 0
+    change_on_win = 0
+    change_on_lose = 0
+    change_on_tie = 0
+    win_change_rate, tie_change_rate, loss_change_rate = 0, 0, 0
+
     # Declare variables used in the loop
     current_chain = 1
     last = None
@@ -44,11 +72,36 @@ def get_favorite_and_highest_chains(player_moves_list): # Calculates 2 values, f
     group = 0
     position = 0
     done = False
+    favorite_first = None
     end = len(player_moves_list)
 
     while not done:
         for index in range(0, end): # Count for entire player moves list
             position = start + index
+            if group == 1: # Use group variable to make sure the RECENT moves are being checked and run the win/lose/tie switch calculations:                
+                # Get values to calculate how frequently the player changes upon winning, losing or tying.
+                if (player_moves_list[position])[:2] == 'W': # Count player wins
+                    win_counter += 1
+                    if position != end:
+                        if (player_moves_list[position])[:1] != (player_moves_list[position+1])[:1]:
+                            change_on_win += 1 # Count how many times player plays a different move next turn on win
+
+                elif (player_moves_list[position])[:2] == 'L':
+                    loss_counter += 1
+                    if position != end:
+                        if (player_moves_list[position])[:1] != (player_moves_list[position+1])[:1]:
+                            change_on_lose += 1 # Count how many times player plays a different move next turn on loss
+                    
+                else:
+                    tie_counter += 1
+                    if position < end-1:
+                        if (player_moves_list[position])[:1] != (player_moves_list[position+1])[:1]:
+                            change_on_tie += 1 # Count how many times player plays a different move on tie
+
+            print((player_moves_list[position])[:3])
+            if (player_moves_list[position])[:3] == 'F': # Increment amount of first moves
+                first_counter += 1
+ 
             if (player_moves_list[position])[:1] == "1":
                 one_counter[group] += 1
             elif (player_moves_list[position])[:1] == "2": # Increase the respective counters for each button
@@ -91,8 +144,13 @@ def get_favorite_and_highest_chains(player_moves_list): # Calculates 2 values, f
             highest_chains[time] = highest_three_chains[time]
         else:
             most_chained_buttons[time] = random.randint(1,3) # TEMPORARY!!! Fallback if any chains are tied, replace later with something better
-    
-    return most_chained_buttons, favorite_button, highest_chains
+    if win_counter > 0 and lose_counter > 0 and tie_counter > 0: 
+        win_change_rate = (change_on_win/win_counter) * 100 # Calculate how frequently player changes move upon winning, losing or tying
+        loss_change_rate = (change_on_lose/lose_counter) * 100
+        tie_change_rate = (change_on_tie/tie_counter) * 100
+
+    return most_chained_buttons, favorite_button, highest_chains, favorite_first, win_change_rate, loss_change_rate, tie_change_rate
+
 
 def find_and_store_patterns(player_moves_list, patterns_list): # Unfinished, Finds and STORES repeating patterns in the player data, for hardmode, coding this is even harder. 
     patterns = [[]] # Stores recurring patterns at patterns[x][0] and how many times they've repeated in patterns[x][1], corresponding to the same.
@@ -100,7 +158,7 @@ def find_and_store_patterns(player_moves_list, patterns_list): # Unfinished, Fin
 
     return patterns
     
-def complex_pattern_process(num, player_moves_list, current_patterns, counter_requirement): # I'm lost as hell
+def complex_pattern_process(num, player_moves_list, current_patterns, counter_requirement): # I'm lost as hell, probably AXING this function
     return
 
 def check_for_patterns(last_2_moves, patterns_list): # Used only to check for pre-existing patterns. Does NOT check playerdata, used along find_and_store_patterns(). Please send help
@@ -134,31 +192,34 @@ def simple_patterns(last_move, player_moves_list):
         next_move = None # Can't predict. (ok it can between the 2 highest but im too lazy)
     return next_move
 
-def weight_and_predict_move(player_moves_list, last_choice, confidence): # Calls functions to get the data values, then weights, calculates and returns the move.
+def weight_and_predict_move(player_moves_list, last_choice, confidence, is_first, last_result): # Calls functions to get the data values, then weights, calculates and returns the move.
     if len(player_moves_list) < 5:
         move = random.randint(1,3) # TEMPORARY!!! Fallback if data insufficient, pure RNG. might update this later to use an "average person" playerdata. 
         return move
-        
+
     # Count highest chain of each button pressed in a row.
-    most_chained_buttons, favorite_button, highest_chains = get_favorite_and_highest_chains(player_moves_list)
+    most_chained_buttons, favorite_button, highest_chains, favorite_first, win_change_rate, loss_change_rate, tie_change_rate = get_favorites_and_highest_chains(player_moves_list)
 
     # Guess logic, give each button RNG weight, 5% chance of mindless RNG. (Tweak this as you go)
-    weights = [0,0,0] # button 1, 2, 3, remainder = TOTAL RNG
+    weights = [30,30,30] # button 1, 2, 3, remainder = TOTAL RNG
+    # Add bias to the usual first move if currently first move (1,2,3)
 
     # Declare all weights, for predictability of player and favorite weights.    
-    multiplier = 1
     very_consistent_last_choice_weight, inconsistent_last_choice_weight, consistent_last_choice_weight  = 10/3, -5, 5/3 
     favorite_weight_overall, favorite_weight_recent = 10/3, 5
     chain_weight_overall, chain_weight_recent  = 5/3, 5
+
 
     # 1. Decide if player is likely to chain or not, how consistent.
     if last_choice != None:
         for period in range (0,2):
             if period == 1:
                 multiplier = 2
+            else:
+                multiplier = 1
             if highest_chains[period] >= 4: # VERY CONSISTENT, +10 weight to last choice.
                 weights[last_choice-1] += very_consistent_last_choice_weight*multiplier*confidence
-            if highest_chains[period] <= 2: # VERY INCONSISTENT, -5 weight to last choice. 
+            elif highest_chains[period] <= 2: # VERY INCONSISTENT, -5 weight to last choice. 
                 weights[last_choice-1] += inconsistent_last_choice_weight*multiplier*confidence
             else: # Somewhat consistent, +5 weight to last choice. 
                 weights[last_choice-1] += consistent_last_choice_weight*multiplier*confidence
@@ -179,6 +240,36 @@ def weight_and_predict_move(player_moves_list, last_choice, confidence): # Calls
     if patterns_button != None:
         weights[patterns_button - 1] += patterns_button_weight
 
+    # First move bias
+    if is_first:
+        for index in range(0,2):
+            if favorite_first != None:
+                if index == favorite_first - 1:
+                    weights[index] += 10 # Add weight of 10 to the favorite first move
+                else:
+                    weights[index] -= 5 # Remove weight from 5 from the 2 others to balance it out.
+
+    # Win/lose based prediction.
+    if last_result != None: # Last result must be W, L, or T
+        if last_result == 'W': # Get change frequency and reaction weight to add on win. lose and tie.
+            reaction_weight = calculate_change_frequency_weight(win_change_rate)
+            change_rate = win_change_rate
+        elif last_result == "L":
+            reaction_weight = calculate_change_frequency_weight(loss_change_rate)
+            change_rate = loss_change_rate
+        else:
+            reaction_weight = calculate_change_frequency_weight(tie_change_rate)
+            change_rate = tie_change_rate
+        # See if change rate majority or minority for appropriate action
+        if change_rate >= 50:
+            for index in range (0,2):
+                if index != last_result:
+                    weights[index] += reaction_weight/2 # Break apart reaction weight and add to every choice EXCEPT last.
+        else:
+            for index in range(0,2):
+                if index == last_result:
+                    weights[index] += reaction_weight # Add reaction weight to last choice, since this is most likely.
+
     # Use assigned RNG weight
     random_number = random.randint(0,100)
     if random_number < weights[0]: 
@@ -189,7 +280,7 @@ def weight_and_predict_move(player_moves_list, last_choice, confidence): # Calls
         move = 3 # In range of button 3 weight 
     else:
         move = random.randint(1,3) # In range of wildcard weight
-    print(weights)
+    print(f"{weights}, sum of weights: {sum(weights)}")
     return move
 
 def main(): # Main gameplay loop, soon to be removed, as pygame is now functional.
@@ -283,6 +374,6 @@ if __name__ == "__main__":
    main()
 
 # # TEMPORARY !!! For testing the complex pattern finding, don't remove until verified working.
-# player_moves_list = get_player_data('rayan')
+# player_moves_list = get_player_data()
 # patterns_list = []
-# find_and_store_patterns(player_moves_list, patterns_list)
+# find_and_store_patterns(player_moves_list, patterns_list)6

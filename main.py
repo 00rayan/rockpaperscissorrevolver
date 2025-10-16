@@ -89,6 +89,7 @@ ai_heart_rect.topright = (SCREEN_WIDTH,0)
 player_heart_rect.bottomleft = (0, SCREEN_HEIGHT)
 
 game_state = "title"
+player_stat = None
 
 while True:
     events = pygame.event.get()
@@ -117,6 +118,7 @@ while True:
 
 # Difficulty select game state
     if game_state == "difficulty": 
+        
         game_window.blit(difficulty_background,(0,0)) # Draw gray background in difficulty select (to be replaced)
         game_window.blit(easy_surface,easy_rect)
         game_window.blit(standard_surface,standard_rect) # Render every difficulty face
@@ -126,6 +128,8 @@ while True:
                 if easy_rect.collidepoint(event.pos) or standard_rect.collidepoint(event.pos) or unfair_rect.collidepoint(event.pos):
                     hp_color = 'Black'
                     game_state = "ingame" # Mark difficulty as selected to move on from difficulty select
+                    is_first = 'F'
+                    is_first_bool = True
                     if easy_rect.collidepoint(event.pos):
                         ingame_background.fill("white")
                         gameplay_object = Gameplay('easy',1,1,False,None)
@@ -176,7 +180,7 @@ while True:
                     player_move = 3
             if player_move != None:
                 round_feedback_timer = 45
-                ai_move = ai_logic.weight_and_predict_move('player_data',player_object.last_choice,ai_object.confidence) # Get AI move.
+                ai_move = ai_logic.weight_and_predict_move(all_player_moves,player_object.last_choice,ai_object.confidence, is_first_bool, player_stat) # Get AI move.
                 player_object.last_choice = player_move
                 if player_move == 1 and ai_move == 2 or player_move == 2 and ai_move == 3 or player_move == 3 and ai_move == 1: # Reward winner score
                     round_loser = player_object # Assign player as loser
@@ -197,12 +201,15 @@ while True:
                     if gameplay_object.difficulty != 'easy' and ai_object.confidence > 0.5:
                         ai_object.confidence -= 0.1
                 chamber = gameplay_object.chamber_count  
-                new_data = f"{str(player_move)}{player_stat}\n"
+                new_data = f"{str(player_move)}{player_stat}{is_first}\n"
+                is_first = "_"
+                is_first_bool = False
                 player_data_for_write.write(new_data) # Update player text file to include last input if valid
                 roulette_spin = random.randint(1,chamber) # Spin number 1-chambersize
                 if roulette_spin == 1 and round_loser != None: # Fire revolver if 1 is spun
                     gameplay_object.chamber_count = 6
                     round_loser.hp -= 1
+
         if loser_name != None:
             loser_status_surface = ingame_font.render(f'{loser_name} lost!',False,'Red')
             loser_status_rect = loser_status_surface.get_rect()
@@ -211,7 +218,7 @@ while True:
                 game_window.blit(loser_status_surface, loser_status_rect)
                 round_feedback_timer -= 1
             
-                    
+
         if ai_object.hp == 0 or player_object.hp == 0:
             if ai_object.hp == 0:
                 gameplay_object.winner = 'Player'
@@ -220,8 +227,10 @@ while True:
             gameplay_object.is_over = True
             game_state = "results"
             round_feedback_timer = 0
+        
 
     if game_state == "results":
+        player_data_for_write.close()
         game_window.fill("White") # Draw white background in results (to be replaced)
         winner_text = ingame_font.render(f'{gameplay_object.winner} wins!', False, 'Green')
         winner_rect = winner_text.get_rect()

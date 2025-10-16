@@ -38,6 +38,12 @@ The program turns the entire text file into an array which is used for the predi
 
 ---
 
+### Win/lose based predictions
+
+Alongside the function that reads the playerdata, number of wins, ties and losses are counted and stored in appropriate integer variables. Then, the next move in sequence for the file is checked, if it changes it is counted. The percentage of wins/losses/ties that result in the user changing their choice 
+
+---
+
 ### Confidence Meter/Multiplier
 
 Adaptive meter measuring AI's confidence. Starts at 1, increases/decreases by 0.1 when AI wins/loses. Capped at maximum 1.5x, minimum 0.5x. Basic but useful feature. Only enabled in hard mode. Confidence meter is absent in easy and standard mode, with the multiplier being set at a static value.
@@ -48,11 +54,11 @@ Adaptive meter measuring AI's confidence. Starts at 1, increases/decreases by 0.
 
 Once all of these features are finished, the game will be complete, with only minor bug fixes or improvements:  
 -Complex/simple pattern recognition [In progress]  
--Graphics [Done]  
+-Graphics [Functional, needs to be polished]
+-Win/lose based predictions [Not implemented]  
 -Russian Roulette to replace FT10 system [Done]  
 -Change game to rock paper scissors [Done]  
--Dynamic weighting [Not implemented]  
--Win/lose based predictions [Not implemented]  
+-Dynamic weighting [Not implemented]   
 -Improved file management [Not implemented]  
 -Audio/Sound effects [Not implemented]  
 -Miscallaneous, fun mechanics (powerups, powerdowns eg) [Not implemented]  
