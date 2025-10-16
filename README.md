@@ -40,8 +40,13 @@ The program turns the entire text file into an array which is used for the predi
 
 ### Win/lose based predictions
 
-Alongside the function that reads the playerdata, number of wins, ties and losses are counted and stored in appropriate integer variables. Then, the next move in sequence for the file is checked, if it changes it is counted. The percentage of wins/losses/ties that result in the user changing their choice 
-
+Alongside the function that reads the playerdata, number of wins, ties and losses are counted and stored in appropriate integer variables. Then, the next move in sequence for the file is checked, if it changes it is counted. The percentage of wins/losses/ties that result in the user changing their choice is calculated, and then according to this a weight is calculated which is either evenly distributed to every other choice except the last or added to the last choice.  
+  
+The formula for the weight is:  
+  
+        W = 5 + 0.3(C-50) 50 < C < 100  
+        W = 5 + 0.3(50-C)  0 < C < 50  
+  
 ---
 
 ### Confidence Meter/Multiplier
