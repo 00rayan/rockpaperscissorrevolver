@@ -18,11 +18,27 @@ class Gameplay:
         self.is_over = is_over
         self.winner = winner
 
+class button_sprite(pygame.sprite.Sprite): # Sprite class for all button sprites
+    def __init__(self,asset,size,position):
+        super().__init__()
+        self.image, self.size = pygame.image.load(asset), (size)
+        self.image = pygame.transform.scale(self.image, (self.size))
+        self.rect = self.image.get_rect()
+        self.rect.center = position
+    
+class enemy_sprite(pygame.sprite.Sprite):
+    def __init__(self,asset,size,position):
+        super().__init__()
+        self.image, self.size = pygame.image.load(asset), (size)
+        self.image = pygame.transform.scale(self.image, (self.size))
+        self.rect = self.image.get_rect()
+        self.rect.center = position
+
 round_loser = None
 loser_name = None
 
 pygame.init() # Initialize pygame
-
+ 
 screen_res = pygame.display.Info()
 SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
 CENTRE_WIDTH = SCREEN_WIDTH // 2
@@ -43,24 +59,29 @@ difficulty_background.fill("grey")
 ingame_background = pygame.Surface((SCREEN_WIDTH,SCREEN_HEIGHT))
 
 
-# Get all game assets, and transform and rect appropriately.
+# Get all game assets, and transform and rect appropriately. Turn into sprites
 # Game title
 game_title_surface, game_title_size = pygame.image.load('assets/sprites/other/rpsrevolverlogo.png'), (768/1024 * SCREEN_WIDTH,192/768 * SCREEN_HEIGHT) # Get logo image (256x64)
 game_title_surface = pygame.transform.scale(game_title_surface, (game_title_size)) # Set size RELATIVE to screen, so it's same regardless of resolution.
 game_title_rect = game_title_surface.get_rect()
 # Button and text
-button_surface, button_size = pygame.image.load('assets/sprites/buttons/buttonflat.png'), (250/800 * SCREEN_WIDTH, 70/450 * SCREEN_HEIGHT)
-button_surface = pygame.transform.scale(button_surface, (button_size)) # Set size relative again.
-button_rect = button_surface.get_rect()
+
+button_surface, button_size, button_center = 'assets/sprites/buttons/playbuttonflat.png', (250/800 * SCREEN_WIDTH, 70/450 * SCREEN_HEIGHT), (CENTRE_WIDTH, 1.25*CENTRE_HEIGHT)
+play_button = button_sprite(button_surface,button_size,button_center)
+sprites_group = pygame.sprite.Group()
 text_surface, text_size = ingame_font.render("PLAY",False,'Black'), (195/800 * SCREEN_WIDTH, 70/450 * SCREEN_HEIGHT)
 text_surface = pygame.transform.scale(text_surface, (text_size))
 text_rect = text_surface.get_rect()
-# Easy, Standard and Unfair AI faces
+# Easy, Standard and Unfair AI faces and sizes
+easy_center = (0.25*CENTRE_WIDTH,CENTRE_HEIGHT)
+standard_center = (CENTRE_WIDTH,CENTRE_HEIGHT)
+unfair_center = (1.75*CENTRE_WIDTH,CENTRE_HEIGHT)
 difficulty_select_size = 1/4 * SCREEN_WIDTH, 1/4 * SCREEN_WIDTH
 ingame_enemy_size = 1/3 * SCREEN_WIDTH, 1/3 * SCREEN_WIDTH
-easy_surface, standard_surface, unfair_surface = pygame.image.load('assets/sprites/easy/state1.png'), pygame.image.load('assets/sprites/standard/state1.png'), pygame.image.load('assets/sprites/unfair/state1.png')
-easy_surface, standard_surface, unfair_surface = pygame.transform.scale(easy_surface, (difficulty_select_size)), pygame.transform.scale(standard_surface, (difficulty_select_size)), pygame.transform.scale(unfair_surface, (difficulty_select_size))
-easy_rect, standard_rect, unfair_rect = easy_surface.get_rect(), standard_surface.get_rect(), unfair_surface.get_rect()
+easy_asset, standard_asset, unfair_asset = 'assets/sprites/easy/state1.png', 'assets/sprites/standard/state1.png', 'assets/sprites/unfair/state1.png'
+easy_difficulty = enemy_sprite(easy_asset,difficulty_select_size,easy_center)
+standard_difficulty = enemy_sprite(standard_asset,difficulty_select_size,standard_center)
+unfair_difficulty = enemy_sprite(unfair_asset,difficulty_select_size,unfair_center)
 # Rock, Paper, Scissor, Revolver Buttons and HP heart
 choice_button_size, heart_size = (1/5 * SCREEN_WIDTH, 1/5 * SCREEN_WIDTH), (1/15 * SCREEN_WIDTH, 1/15 * SCREEN_WIDTH)
 rock_surface, paper_surface, scissor_surface = pygame.image.load('assets/sprites/ingame/rock.png'), pygame.image.load('assets/sprites/ingame/paper.png'), pygame.image.load('assets/sprites/ingame/scissor.png')
@@ -70,17 +91,13 @@ player_heart_surface = pygame.transform.scale(player_heart_surface, (heart_size)
 ai_heart_surface = pygame.image.load('assets/sprites/ingame/heart.png')
 ai_heart_surface = pygame.transform.scale(player_heart_surface, (heart_size))
 
+enemy_size = CENTRE_WIDTH, 0.5*CENTRE_HEIGHT
 hp_size = 1/10 * SCREEN_WIDTH, 1/10 * SCREEN_HEIGHT
 rock_rect, paper_rect, scissor_rect = rock_surface.get_rect(), paper_surface.get_rect(), scissor_surface.get_rect()
 player_heart_rect = player_heart_surface.get_rect()
 ai_heart_rect = ai_heart_surface.get_rect()
 # Set rectangle centers for game logo, button and text
 game_title_rect.center = (CENTRE_WIDTH, 0.75*CENTRE_HEIGHT)
-button_rect.center = (CENTRE_WIDTH, 1.25*CENTRE_HEIGHT)
-text_rect.center = button_rect.center
-easy_rect.center = (0.25*CENTRE_WIDTH,CENTRE_HEIGHT)
-standard_rect.center = (CENTRE_WIDTH,CENTRE_HEIGHT)
-unfair_rect.center = (1.75*CENTRE_WIDTH,CENTRE_HEIGHT)
 rock_rect.center = (0.5*CENTRE_WIDTH,1.5*CENTRE_HEIGHT)
 paper_rect.center = (CENTRE_WIDTH, 1.5*CENTRE_HEIGHT)
 scissor_rect.center = (1.5*CENTRE_WIDTH, 1.5*CENTRE_HEIGHT)
@@ -99,7 +116,8 @@ while True:
             exit()
     # Game sprites and whatever drawn here
 # Title screen game state
-    if game_state == "title": 
+    if game_state == "title":
+        sprites_group.add(play_button) 
         game_window.blit(rps_background,(rps_x,rps_y)) # Draw white background in main menu (to be replaced)
         if rps_x > (SCREEN_WIDTH-bg_horizontal_size) and rps_y > (SCREEN_HEIGHT-bg_vertical_size):
             rps_x -= 1
@@ -108,47 +126,48 @@ while True:
             rps_x = 0
             rps_y = 0
         game_window.blit(game_title_surface,game_title_rect) # Render the game title and play button until user clicks a button
-        game_window.blit(button_surface,button_rect)
-        game_window.blit(text_surface,text_rect)
+        sprites_group.draw(game_window)
         for event in events: # Check if play button pressed
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if button_rect.collidepoint(event.pos):
+                if pygame.sprite.spritecollide(play_button,sprites_group,True):
+                    sprites_group.remove(play_button)
                     game_state = "difficulty" # Move on from title screen
+                    sprites_group.add(easy_difficulty)
+                    sprites_group.add(standard_difficulty)
+                    sprites_group.add(unfair_difficulty)
                     events.clear()
 
 # Difficulty select game state
     if game_state == "difficulty": 
-        
         game_window.blit(difficulty_background,(0,0)) # Draw gray background in difficulty select (to be replaced)
-        game_window.blit(easy_surface,easy_rect)
-        game_window.blit(standard_surface,standard_rect) # Render every difficulty face
-        game_window.blit(unfair_surface,unfair_rect)
+
+        sprites_group.draw(game_window)  # Render every difficulty face
         for event in events: # Check if difficulty button clicked
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if easy_rect.collidepoint(event.pos) or standard_rect.collidepoint(event.pos) or unfair_rect.collidepoint(event.pos):
+                if easy_difficulty.rect.collidepoint(event.pos) or standard_difficulty.rect.collidepoint(event.pos) or unfair_difficulty.rect.collidepoint(event.pos):
+                    sprites_group.remove(easy_difficulty)
+                    sprites_group.remove(standard_difficulty)
+                    sprites_group.remove(unfair_difficulty)
                     hp_color = 'Black'
                     game_state = "ingame" # Mark difficulty as selected to move on from difficulty select
                     is_first = 'F'
                     is_first_bool = True
-                    if easy_rect.collidepoint(event.pos):
+                    if easy_difficulty.rect.collidepoint(event.pos):
                         ingame_background.fill("white")
                         gameplay_object = Gameplay('easy',1,1,False,None)
                         ai_object, player_object = Player(1,2,None), Player(3,1,None)
-                        enemy_sprite = pygame.transform.scale(easy_surface, ingame_enemy_size)
-                    elif standard_rect.collidepoint(event.pos): # Assign appropriate difficulty values
+                        enemy_sprite_object = enemy_sprite('assets/sprites/easy/state1.png',ingame_enemy_size,enemy_size)
+                    elif standard_difficulty.rect.collidepoint(event.pos): # Assign appropriate difficulty values
                         ingame_background.fill("gray90")
                         gameplay_object = Gameplay('standard',6,1,False,None)
                         ai_object, player_object = Player(2,1,None), Player(2,1,None)
-                        enemy_sprite = pygame.transform.scale(standard_surface, ingame_enemy_size)
-                    elif unfair_rect.collidepoint(event.pos):
+                        enemy_sprite_object = enemy_sprite('assets/sprites/standard/state1.png',ingame_enemy_size,enemy_size)
+                    elif unfair_difficulty.rect.collidepoint(event.pos):
                         hp_color = 'White'
                         ingame_background.fill("gray12")
                         gameplay_object = Gameplay('unfair',6,1,False,None)
                         ai_object, player_object = Player(2,1,None), Player(1,1,None)
-                        enemy_sprite = pygame.transform.scale(unfair_surface, ingame_enemy_size)
-                    enemy_rect = enemy_sprite.get_rect()
-                    enemy_rect.center = CENTRE_WIDTH, 0.5*CENTRE_HEIGHT
-                   
+                        enemy_sprite_object = enemy_sprite('assets/sprites/unfair/state1.png',ingame_enemy_size,enemy_size)
 # Gameplay game state
     if game_state == "ingame" and not gameplay_object.is_over:
         game_window.blit(ingame_background,(0,0)) # Draw blue background ingame (to be replaced)
@@ -161,7 +180,7 @@ while True:
         player_hp_surface = ingame_font.render(f'{player_object.hp}', False, hp_color)
         ai_hp_rect, player_hp_rect, = ai_hp_surface.get_rect(), player_hp_surface.get_rect() # Create rect for AI and player HP for easy placement
         ai_hp_rect.topright, player_hp_rect.bottomleft = (0.925*SCREEN_WIDTH,0), (0.075*SCREEN_WIDTH,SCREEN_HEIGHT)
-        game_window.blit(enemy_sprite, enemy_rect) # Render rock, paper, scissor buttons.
+        # Render rock, paper, scissor buttons.
         game_window.blit(rock_surface, rock_rect)
         game_window.blit(paper_surface, paper_rect)
         game_window.blit(scissor_surface, scissor_rect)
@@ -169,6 +188,8 @@ while True:
         game_window.blit(ai_hp_surface, ai_hp_rect)
         game_window.blit(player_heart_surface, player_heart_rect)
         game_window.blit(player_hp_surface, player_hp_rect)
+        sprites_group.add(enemy_sprite_object)
+        sprites_group.draw(game_window)
         for event in events:
             player_move = None
             if event.type == pygame.MOUSEBUTTONDOWN: # Detect if player has chosen.
@@ -225,31 +246,29 @@ while True:
             else:
                 gameplay_object.winner = 'AI'
             gameplay_object.is_over = True
+            events.clear()
             game_state = "results"
             round_feedback_timer = 0
         
 
     if game_state == "results":
-        player_data_for_write.close()
+        sprites_group.remove(enemy_sprite_object)
+        menu_button_surface, button_size, button_center = 'assets/sprites/buttons/menubuttonflat.png', (250/800 * SCREEN_WIDTH, 70/450 * SCREEN_HEIGHT), (CENTRE_WIDTH, 1.1*CENTRE_HEIGHT)
         game_window.fill("White") # Draw white background in results (to be replaced)
+        menu_button = button_sprite(menu_button_surface,button_size,button_center)
+        sprites_group.add(menu_button)
+        sprites_group.draw(game_window)
+        player_data_for_write.close()
         winner_text = ingame_font.render(f'{gameplay_object.winner} wins!', False, 'Green')
         winner_rect = winner_text.get_rect()
-        menu_button_rect = button_surface.get_rect()
-        menu_text = ingame_font.render("MENU", False, 'Black')
-        menu_text = pygame.transform.scale(menu_text, (text_size))
-        menu_text_rect = menu_text.get_rect() 
-        menu_button_rect.center = (CENTRE_WIDTH, 1.1*CENTRE_HEIGHT)
-        menu_text_rect.center = menu_button_rect.center
         winner_rect.center = (CENTRE_WIDTH, 0.8*CENTRE_HEIGHT)
         game_window.blit(winner_text, winner_rect)
-        game_window.blit(button_surface, menu_button_rect)
-        game_window.blit(menu_text, menu_text_rect)
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:    
-                if menu_button_rect.collidepoint(event.pos):
+                if pygame.sprite.spritecollide(menu_button,sprites_group,True):
+                    sprites_group.remove(menu_button)
                     game_state = "title"
-                    
+                    events.clear()
 
-    pygame.display.update() # Update display
+    pygame.display.flip() # Update display
     clock.tick(60) # 60FPS cap.
-    

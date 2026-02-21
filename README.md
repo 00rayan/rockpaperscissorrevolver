@@ -58,20 +58,22 @@ Adaptive meter measuring AI's confidence. Starts at 1, increases/decreases by 0.
 ## Unfinished Features
 
 Once all of these features are finished, the game will be complete, with only minor bug fixes or improvements:  
--Complex/simple pattern recognition [In progress]  
--Graphics [Functional, needs to be polished]
+
+-Graphics [Functional, needs to be polished]  
 -Win/lose based predictions [Not implemented]  
+-Dynamic weighting [In progress]
+-Simple pattern recognition [Done]
 -Russian Roulette to replace FT10 system [Done]  
 -Change game to rock paper scissors [Done]  
--Dynamic weighting [Not implemented]   
 -Improved file management [Not implemented]  
 -Audio/Sound effects [Not implemented]  
 -Miscallaneous, fun mechanics (powerups, powerdowns eg) [Not implemented]  
 -Challenge Mode: 1 HP, endless with invincible hardmode bot. [Not implemented]  
+-Complex pattern recognition [Scrapped]  
 
 Development Stages:
-1. Make first finished prototype with graphics [In progress]  
-2. Significantly improve AI [Not started]  
+1. Make first finished prototype with graphics [Done]  
+2. Significantly improve AI [In progress]  
 3. Polish visuals, animations, SFX, etc. [Not started]  
 
 ---

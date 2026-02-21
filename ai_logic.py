@@ -24,14 +24,8 @@ def update_highest_chains(favorite1,favorite2,favorite3,last_button,current_chai
     return
 
 def calculate_change_frequency_weight(change_rate): # Calculate a weight based on the change rate and return, returns 3 times.
-    if change_rate > 50: # If change rate > 50%, frequent change.
-        frequent_change = True
-    else:
-        frequent_change = False # Infrequent change.
-    
-    # Calculate weight value based off of the change rate (exponential)
     # The max weight is 20, for a positive change rate so we will calculate it here.
-    if frequent_change:
+    if change_rate > 50:
         calculated_weight = 5 + 0.3*(change_rate-50) # Weird formula i worked out to calculate weight proportionally
     # For a negative change rate the weight is higher the less it is. So inverse the first function?
     else:
@@ -98,7 +92,6 @@ def get_favorites_and_highest_chains(player_moves_list): # Calculates 2 values, 
                         if (player_moves_list[position])[:1] != (player_moves_list[position+1])[:1]:
                             change_on_tie += 1 # Count how many times player plays a different move on tie
 
-            print((player_moves_list[position])[:3])
             if (player_moves_list[position])[:3] == 'F': # Increment amount of first moves
                 first_counter += 1
  
